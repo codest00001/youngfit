@@ -26,7 +26,7 @@ async function main() {
   });
   const translations = translateResponse.body;
   for (const translation of translations) {
-    console.log(`en_text : '${translation?.translations[0]?.text}'.`);
+    console.log(`en_text : '${translation?.translations[0]?.text}'`);
   }
 }
 
