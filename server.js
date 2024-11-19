@@ -1,28 +1,26 @@
+// server.js
 const express = require('express');
-const sequelize = require('./database');
-const userRoutes = require('./routes/userRoutes');
-const errorHandler = require('./middleware/errorHandler');
+const User = require('./models/User'); // User 모델 가져오기
 
 const app = express();
-const PORT = 3000;
+const port = 3000;
 
-// JSON 파싱 미들웨어
-app.use(express.json());
+// 미들웨어
+app.use(express.json()); // JSON 요청 본문을 파싱
 
-// 라우터
-app.use('/users', userRoutes);
+// 간단한 라우팅 예시
+app.post('/register', async (req, res) => {
+  const { name, email, password } = req.body;
 
-// 에러 처리 미들웨어
-app.use(errorHandler);
-
-// 데이터베이스 연결 및 서버 시작
-(async () => {
   try {
-    await sequelize.authenticate();
-    console.log('데이터베이스 연결 성공');
-    await sequelize.sync(); // 데이터베이스 테이블 생성
-    app.listen(PORT, () => console.log(`서버가 http://localhost:${PORT}에서 실행 중입니다.`));
+    const user = await User.create({ name, email, password });
+    res.status(201).json(user);
   } catch (error) {
-    console.error('데이터베이스 연결 실패:', error);
+    console.error('Error creating user:', error);
+    res.status(500).json({ error: 'Failed to create user' });
   }
-})();
+});
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});

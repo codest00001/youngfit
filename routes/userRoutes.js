@@ -1,9 +1,8 @@
 const express = require('express');
-const { registerUser } = require('../controllers/userController');
-
 const router = express.Router();
+const userController = require('../controllers/userController'); // 컨트롤러 임포트
 
-// 회원가입 엔드포인트
-router.post('/register', registerUser);
+// 회원가입 API
+router.post('/signup', userController.signup);
 
 module.exports = router;

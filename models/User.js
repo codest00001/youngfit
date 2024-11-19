@@ -1,24 +1,22 @@
-const { DataTypes } = require('sequelize');
-const bcrypt = require('bcrypt');
+const { Sequelize, DataTypes } = require('sequelize');
 const sequelize = require('../database');
 
 const User = sequelize.define('User', {
   id: {
-    type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
+    type: DataTypes.INTEGER,
+    defaultValue: Sequelize.INTEGER,
     primaryKey: true,
   },
-  nickname: {
+  name: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true,
   },
   email: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true,
+    unique: true, // 이메일 중복 방지
     validate: {
-      isEmail: true,
+      isEmail: true, // 이메일 형식 검증
     },
   },
   password: {
@@ -26,24 +24,16 @@ const User = sequelize.define('User', {
     allowNull: false,
   },
   level: {
-    type: DataTypes.INTEGER,
-    defaultValue: 1,
+    type: DataTypes.STRING,
+    defaultValue: 'AA', // 기본값 설정
   },
-  joinedAt: {
+  createdAt: {
     type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
+    defaultValue: Sequelize.NOW,
   },
 });
 
-// 비밀번호 해싱
-User.beforeCreate(async (user) => {
-  const salt = await bcrypt.genSalt(10);
-  user.password = await bcrypt.hash(user.password, salt);
-});
-
-// 비밀번호 검증 메서드
-User.prototype.validatePassword = async function (inputPassword) {
-  return bcrypt.compare(inputPassword, this.password);
-};
+// 테이블 동기화 (이 부분은 개발 환경에서만 사용하는 것이 좋습니다)
+sequelize.sync();
 
 module.exports = User;
