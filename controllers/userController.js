@@ -1,37 +1,39 @@
-const bcrypt = require('bcrypt');
-const User = require('../models/User');
+const { User } = require('../models');
+const { validationResult } = require('express-validator');
+const jwt = require('jsonwebtoken');
 
-// 회원가입 처리
-exports.signup = async (req, res) => {
-  try {
-    const { name, email, password, level } = req.body;
-
-    // 비밀번호 해싱
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // 사용자 생성
-    const newUser = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      level: level || 'beginner', // 기본값 설정
-    });
-
-    res.status(201).json({
-      message: 'User created successfully',
-      user: {
-        id: newUser.id,
-        name: newUser.name,
-        email: newUser.email,
-        level: newUser.level,
-        createdAt: newUser.createdAt,
-      },
-    });
-  } catch (error) {
-    if (error.name === 'SequelizeUniqueConstraintError') {
-      res.status(400).json({ error: 'Email or name is already in use' });
-    } else {
-      res.status(500).json({ error: 'Failed to create user' });
+// 모든 사용자 조회
+exports.findAll = async (req, res) => {
+    try {
+        const users = await User.findAll();
+        res.status(200).json(users);
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({ error: 'Failed to fetch users.' });
     }
-  }
+};
+
+// 사용자 생성
+exports.createUser = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, password, name, level } = req.body;
+    try {
+        const user = await User.create({ email, password, name, level });
+
+        // 사용자 생성 시 JWT 토큰 발급
+        const token = jwt.sign(
+            { id: user.id, email: user.email }, // 토큰에 포함할 정보
+            'access', // 비밀키
+            { expiresIn: '1h' } // 토큰 만료 시간
+        );
+
+        res.status(201).json({ user, token });
+    } catch (error) {
+        console.error('Error creating user:', error);
+        res.status(500).json({ error: 'Failed to create user.' });
+    }
 };
